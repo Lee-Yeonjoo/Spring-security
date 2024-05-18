@@ -11,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import study.springjwt.jwt.JWTUtil;
 import study.springjwt.jwt.LoginFilter;
 
 @Configuration //스프링이 configuration으로 관리
@@ -19,6 +20,7 @@ import study.springjwt.jwt.LoginFilter;
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final JWTUtil jwtUtil;
 
     @Bean //로그인 필터의 인자로 auth매니저를 넣어주기 위해
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -56,7 +58,7 @@ public class SecurityConfig {
 
         //커스텀 필터 등록
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class); //UsernamePasswordAuthenticationFilter를 대체하므로 그 자리에 등록
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class); //UsernamePasswordAuthenticationFilter를 대체하므로 그 자리에 등록
 
         //세션 설정 - JWT방식은 세션을 stateless상태로 설정해야한다! 가장 중요!
         http

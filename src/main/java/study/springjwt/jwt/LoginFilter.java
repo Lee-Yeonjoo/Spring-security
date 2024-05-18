@@ -8,12 +8,18 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import study.springjwt.dto.CustomUserDetails;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter { //회원 검증을 위한 커스텀 필터 -> SecurityConfig에 등록해야한다.
 
     private final AuthenticationManager authenticationManager;
+    private final JWTUtil jwtUtil;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -35,13 +41,30 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter { //회원
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
-        System.out.println("success");
+        //jwt 발급
+        //user객체를 알아내기 위함
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal(); //특정 유저를 가져온다.
+
+        //customUserDetails에서 username 추출
+        String username = customUserDetails.getUsername();
+
+        //authentication에서 role값 추출
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+        GrantedAuthority auth = iterator.next();
+        String role = auth.getAuthority();
+
+        //추출한 username과 role을 JWTUtil에 전달해 토큰 발급
+        String token = jwtUtil.createJwt(username, role, 60 * 60 * 10L);
+
+        //발급받은 jwt를 response의 헤더에 담아서 응답
+        response.addHeader("Authorization", "Bearer " + token); //Authorization은 키값. jwt토큰 앞에 Bearer이라는 접두사를 붙이고 띄어써야 한다.
     }
 
     //검증 실패 시 실행되는 메소드
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
-        System.out.println("fail");
+        response.setStatus(401);
     }
 }
