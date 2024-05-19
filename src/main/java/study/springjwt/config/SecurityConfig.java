@@ -1,5 +1,6 @@
 package study.springjwt.config;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,9 +12,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import study.springjwt.jwt.JWTFilter;
 import study.springjwt.jwt.JWTUtil;
 import study.springjwt.jwt.LoginFilter;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @Configuration //스프링이 configuration으로 관리
 @EnableWebSecurity //시큐리티를 위한 config
@@ -37,6 +43,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        //cors처리
+        http
+                .cors(cors -> cors
+                        .configurationSource(new CorsConfigurationSource() {
+                            @Override
+                            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+
+                                CorsConfiguration configuration = new CorsConfiguration();
+
+                                //cors에 대해 각 값들을 설정해준다.
+                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); //3000번 포트를 허용
+                                configuration.setAllowedMethods(Collections.singletonList("*")); //모든 메소드를 허용
+                                configuration.setAllowCredentials(true);
+                                configuration.setAllowedHeaders(Collections.singletonList("*")); //모든 헤더 허용
+                                configuration.setMaxAge(3600L); //허용하는 시간
+
+                                configuration.setExposedHeaders(Collections.singletonList("Authorization")); //클라이언트로 헤더를 보낼 때, Authorization에 jwt를 넣어서 보낼거라서 Authorization 헤더도 허용
+
+                                return configuration;
+                            }
+                        }));
 
         //csrf를 disable 설정 - 세션방식과 달리 JWT방식은 csrf에 대한 공격을 방어하지 않아도 된다.
         http
