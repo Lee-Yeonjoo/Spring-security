@@ -11,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import study.springjwt.jwt.JWTFilter;
 import study.springjwt.jwt.JWTUtil;
 import study.springjwt.jwt.LoginFilter;
 
@@ -55,6 +56,10 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/", "/join").permitAll() //해당 경로에선 모든 권한 허용
                         .requestMatchers("/admin").hasRole("ADMIN") //해당 경로에선 admin만 권한 허용
                         .anyRequest().authenticated()); //이외의 요청에서는 권한 허용x
+
+        //jwt토큰 검증 필터 등록
+        http
+                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class); //로그인 필터 앞에 jwt필터 추가
 
         //커스텀 필터 등록
         http
